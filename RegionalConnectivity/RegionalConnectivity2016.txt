@@ -1,0 +1,2 @@
+Average = 35.605761
+Standard Error = 0.304819
