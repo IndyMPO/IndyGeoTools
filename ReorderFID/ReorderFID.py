@@ -3,6 +3,7 @@ import json
 
 data_file = arcpy.GetParameterAsText(0)
 map_file = arcpy.GetParameterAsText(1)
+taz_field = arcpy.GetParameterAsText(2)
 
 #data_file = 'C:/IndyLUM/Model/Inputs/ZONES.dbf'
 #map_file = 'H:/TAZ_FID_MAP.json'
@@ -21,7 +22,7 @@ row_map = {}
 arcpy.AddMessage('Identifying TAZ field index')
 fields = [field.name for field in arcpy.ListFields(data_file)]
 for i in range(len(fields)):
-    if fields[i] == 'TAZ':
+    if fields[i] == taz_field:
         taz_index = i
         break
 
