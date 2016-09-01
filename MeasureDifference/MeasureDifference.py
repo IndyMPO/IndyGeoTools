@@ -6,9 +6,7 @@ new_file = arcpy.GetParameterAsText(2)
 if new_file[-4:] != '.shp':
     new_file += '.shp'
     
-common_fields = []
-for i in range(10):
-    common_fields.append(arcpy.GetParameterAsText(3+i))
+common_fields = arcpy.GetParameterAsText(3).split(';')
 
 proceed = False
 while not proceed:
