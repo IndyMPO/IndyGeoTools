@@ -33,38 +33,21 @@ except Exception:
     arcpy.Delete_management(new_file)
     arcpy.CopyFeatures_management(file_1, new_file)
 
-new_field_method = {}
+field_truncations = {}
 arcpy.AddMessage('Adding fields')
 for field in fields_1:
     if field not in static_fields:
         arcpy.DeleteField_management(new_file, field)
-        try:
-            first_char = int(field[0])
-            if len(field) <= 7:
-                arcpy.AddField_management(new_file, '_' + field + 'D', 'DOUBLE')
-                arcpy.AddField_management(new_file, '_' + field + 'PD', 'DOUBLE')
-                new_field_method[field] = 0
-            else:
-                arcpy.AddMessage('WARNING: Truncating ' + field + ' to last 7 characters')
-                arcpy.AddField_management(new_file, '_' + field[-7:] + 'D', 'DOUBLE')
-                arcpy.AddField_management(new_file, '_' + field[-7:] + 'PD', 'DOUBLE')
-                new_field_method[field] = 1
-        except ValueError:
-            if len(field) <= 6:
-                arcpy.AddField_management(new_file, field + 'D', 'DOUBLE')
-                arcpy.AddField_management(new_file, field + 'PD', 'DOUBLE')
-                new_field_method[field] = 2
-            else:
-                if field[-6:] + 'D' not in [f.name for f in arcpy.ListFields(new_file)]:
-                    arcpy.AddMessage('WARNING: Truncating ' + field + ' to last 8 characters')
-                    arcpy.AddField_management(new_file, field[-6:] + 'D', 'DOUBLE')
-                    arcpy.AddField_management(new_file, field[-6:] + 'PD', 'DOUBLE')
-                    new_field_method[field] = 3
-                else:
-                    arcpy.AddMessage('WARNING: Truncating ' + field + ' to first 8 characters')
-                    arcpy.AddField_management(new_file, field[:6] + 'D', 'DOUBLE')
-                    arcpy.AddField_management(new_file, field[:6] + 'PD', 'DOUBLE')
-                    new_field_method[field] = 4
+
+        if len(field) <= 9:
+            arcpy.AddField_management(new_file, field + 'D', 'DOUBLE')
+            arcpy.AddField_management(new_file, field + 'P', 'DOUBLE')
+            field_truncations[field] = False
+        else:
+            arcpy.AddMessage('WARNING: Removing last character from ' + field)
+            arcpy.AddField_management(new_file, field[:9] + 'D', 'DOUBLE')
+            arcpy.AddField_management(new_file, field[:9] + 'P', 'DOUBLE')
+            field_truncations[field] = True
 
 new_fields = [field.name for field in arcpy.ListFields(new_file)]
 
@@ -80,28 +63,23 @@ for geo in geo_2:
     data_2[geo[0]] = geo
 
 arcpy.AddMessage('Calculating difference')
-#cf = len(common_fields)
+
 N = len(fields_1)
 diff_geo = arcpy.da.UpdateCursor(new_file, field_names = new_fields)
 for geo in diff_geo:
     gid = geo[0]
     for i in range(N):
-        if fields_1[i] in static_fields:           
+        if fields_1[i] in static_fields: #If the field is one of the static fields, just place it           
             new_field_index = new_fields.index(fields_1[i])
             geo[new_field_index] = data_1[gid][i]
             
-        else:
-            
-            if new_field_method[fields_1[i]] == 0:
-                new_field_index = new_fields.index('_' + fields_1[i] + 'D')
-            elif new_field_method[fields_1[i]] == 1:
-                new_field_index = new_fields.index('_' + fields_1[i][-7:] + 'D')
-            elif new_field_method[fields_1[i]] == 2:
-                new_field_index = new_fields.index(fields_1[i] + 'D')
-            elif new_field_method[fields_1[i]] == 3:
-                new_field_index = new_fields.index(fields_1[i][-6:] + 'D')
+        else: #Otherwise, calculate the difference and percent difference
+
+            #Get the index of the new field based on whether or not the field name was truncated
+            if field_truncations[fields_1[i]]:
+                new_field_index = new_fields.index(fields_1[i][:9] + 'D')
             else:
-                new_field_index = new_fields.index(fields_1[i][:6] + 'D')
+                new_field_index = new_fields.index(fields_1[i] + 'D')
 
             geo[new_field_index] = data_2[gid][i] - data_1[gid][i]
             try:
