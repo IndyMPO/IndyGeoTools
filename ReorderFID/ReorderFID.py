@@ -34,11 +34,11 @@ for row in rows:
     data[taz] = list(row[1:])
 
 arcpy.AddMessage('Writing correct TAZ data to each polygon')
-rows = arcpy.da.UpdateCursor(data_file, field_names = fields)
-for row in rows:
-    taz = taz_fid_map[unicode(row[0])]
-    for i in range(1, len(fields)):
-        row[i] = data[taz][i-1]
-    rows.updateRow(row)
-del row
-del rows
+##rows = arcpy.da.UpdateCursor(data_file, field_names = fields)
+##for row in rows:
+##    taz = taz_fid_map[unicode(row[0])]
+##    for i in range(1, len(fields)):
+##        row[i] = data[taz][i-1]
+##    rows.updateRow(row)
+##del row
+##del rows
