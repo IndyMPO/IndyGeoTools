@@ -33,14 +33,14 @@ for taz in tazs:
 
     #If a TAZ is an EJ TAZ, add data for the EJ averages
     if str(taz[0]) in ej_tazs:
-        ej_auto_num += taz[1]*(taz[2] + taz[3])
-        ej_transit_num += taz[1]*taz[4]
+        ej_auto_num += taz[2] + taz[3]
+        ej_transit_num += taz[4]
         ej_hh += taz[1]
 
     #Otherwise, add data for non-EJ averages
     else:
-        non_auto_num += taz[1]*(taz[2] + taz[3])
-        non_transit_num += taz[1]*taz[4]
+        non_auto_num += taz[2] + taz[3]
+        non_transit_num += taz[4]
         non_hh += taz[1]
 
 #Compute averages
