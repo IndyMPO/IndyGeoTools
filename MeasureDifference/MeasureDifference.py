@@ -1,4 +1,5 @@
 import arcpy
+import os
 
 file_1 = arcpy.GetParameterAsText(0)
 file_2 = arcpy.GetParameterAsText(1)
@@ -7,6 +8,12 @@ if new_file[-4:] != '.shp':
     new_file += '.shp'
     
 static_fields = arcpy.GetParameterAsText(3).split(';')
+
+key_field = arcpy.GetParameterAsText(4)
+if key_field:
+    key_id = [field.name for field in arcpy.ListFields(file_1)].index(key_field)
+else:
+    key_id = 0
 
 proceed = False
 while not proceed:
@@ -26,12 +33,17 @@ features_2 = int(arcpy.GetCount_management(file_2).getOutput(0))
 assert features_1 == features_2, 'Initial and final shapefiles must have the same number of features'
 
 arcpy.AddMessage('Creating new file')
-try:
-    arcpy.CopyFeatures_management(file_1, new_file)
-except Exception:
-    arcpy.AddMessage('WARNING: Overwriting existing file ' + new_file)
+##try:
+##    arcpy.CopyFeatures_management(file_1, new_file)
+##except Exception:
+##    arcpy.AddMessage('WARNING: Overwriting existing file ' + new_file)
+##    arcpy.Delete_management(new_file)
+##    arcpy.CopyFeatures_management(file_1, new_file)
+new_file_path = new_file.split('\\')
+new_file_dir = '\\'.join(new_file_path[:-1])
+if new_file_path[-1] in os.listdir(new_file_dir):
     arcpy.Delete_management(new_file)
-    arcpy.CopyFeatures_management(file_1, new_file)
+arcpy.CopyFeatures_management(file_1, new_file)
 
 field_truncations = {}
 arcpy.AddMessage('Adding fields')
@@ -57,17 +69,17 @@ data_2 = {}
 
 geo_1 = arcpy.da.SearchCursor(file_1, field_names = fields_1)
 for geo in geo_1:
-    data_1[geo[0]] = geo
+    data_1[geo[key_id]] = geo
 geo_2 = arcpy.da.SearchCursor(file_2, field_names = fields_2)
 for geo in geo_2:
-    data_2[geo[0]] = geo
+    data_2[geo[key_id]] = geo
 
 arcpy.AddMessage('Calculating difference')
 
 N = len(fields_1)
 diff_geo = arcpy.da.UpdateCursor(new_file, field_names = new_fields)
 for geo in diff_geo:
-    gid = geo[0]
+    gid = geo[key_id]
     for i in range(N):
         if fields_1[i] in static_fields: #If the field is one of the static fields, just place it           
             new_field_index = new_fields.index(fields_1[i])
