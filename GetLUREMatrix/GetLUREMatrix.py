@@ -7,7 +7,7 @@ import numpy as np
 
 parcel_point_file = arcpy.GetParameterAsText(0)
 re_col = arcpy.GetParameterAsText(1)
-unit_col = arcpy.GetParameterAsText(2)
+area_col = arcpy.GetParameterAsText(2)
 lu_polygon_file = arcpy.GetParameterAsText(3)
 lu_col = arcpy.GetParameterAsText(4)
 joined_shp_file = arcpy.GetParameterAsText(5)
@@ -43,7 +43,7 @@ arcpy.AddMessage('Aggregating Data')
 units = {}
 total = {}
 
-parcels = arcpy.da.SearchCursor(joined_shp_file, field_names = [re_col, unit_col, lu_col])
+parcels = arcpy.da.SearchCursor(joined_shp_file, field_names = [re_col, area_col, lu_col])
 for parcel in parcels:
     if parcel[0] == 0:
         continue
