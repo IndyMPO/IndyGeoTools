@@ -112,9 +112,9 @@ def calc_auto_acc(bool_skim, zone_map, taz_file):
     '''
     global taz_field, pop_field, emp_field, ret_field, accpop_name, accret_name, accnre_name
 
-    pop = np.empty_like(bool_skim)
-    ret = np.empty_like(bool_skim)
-    nre = np.empty_like(bool_skim)
+    pop = np.empty_like(bool_skim, dtype = int)
+    ret = np.empty_like(bool_skim, dtype = int)
+    nre = np.empty_like(bool_skim, dtype = int)
 
     #For each zone, create ndarrays that represent the number of people, retail, and non-retail jobs that can be reached within a specific time
     zones = arcpy.da.SearchCursor(taz_file, field_names = [taz_field, pop_field, emp_field, ret_field])
@@ -155,9 +155,9 @@ def calc_auto_att(bool_skim, zone_map, taz_file):
     '''
     global taz_field, pop_field, emp_field, ret_field, attpop_name, attret_name, attnre_name
 
-    pop = np.empty_like(bool_skim)
-    ret = np.empty_like(bool_skim)
-    nre = np.empty_like(bool_skim)
+    pop = np.empty_like(bool_skim, dtype = int)
+    ret = np.empty_like(bool_skim, dtype = int)
+    nre = np.empty_like(bool_skim, dtype = int)
 
     #For each zone, create ndarrays that represent the number of people, retail, and non-retail jobs that can reach a zone within a specific time
     zones = arcpy.da.SearchCursor(taz_file, field_names = [taz_field, pop_field, emp_field, ret_field])
@@ -198,7 +198,7 @@ def calc_transit_acc(bool_skim, zone_map, taz_file):
     '''
     global taz_field, emp_field, trnacc_name
 
-    emp = np.empty_like(bool_skim)
+    emp = np.empty_like(bool_skim, dtype = int)
 
     #Calculate number of jobs that can be reached by each origin zone in each destination zone within a specific time
     zones = arcpy.da.SearchCursor(taz_file, field_names = [taz_field, emp_field])
