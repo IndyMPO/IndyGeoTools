@@ -62,7 +62,7 @@ for i in range(1, 13):
     lines[0] += [str(i)]
 
 for lu in units:
-    line = [lu]
+    line = [str(lu)]
     for re in units[lu]:
         try:
             line += [str(float(units[lu][re])/total[lu])]
