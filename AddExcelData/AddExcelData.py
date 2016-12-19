@@ -6,12 +6,15 @@ id_field = arcpy.GetParameterAsText(1)
 excel_file = arcpy.GetParameterAsText(2)
 sheet = arcpy.GetParameter(3)
 
+#Map to determine each new field's data type based on the data frame's column's data type
 dtype_map = {'int64': 'LONG',
              'float32': 'FLOAT',
              'float64': 'DOUBLE'}
 
+#Read in data
 data = pd.read_excel(excel_file, sheet, index_col = 0)
 
+#Add fields based on columns of the table
 new_fields = []
 for col in data.columns:
     new_field = sheet + col
@@ -19,6 +22,7 @@ for col in data.columns:
     if new_field not in [field.name for field in arcpy.ListFields(shapefile)]:
         arcpy.AddField_management(shapefile, new_field, dtype_map[str(data[col].dtype)], field_is_nullable = True)
 
+#Write values in data frame to attribute table
 rows = arcpy.da.UpdateCursor(shapefile, field_names = [id_field] + new_fields)
 for row in rows:
     try:

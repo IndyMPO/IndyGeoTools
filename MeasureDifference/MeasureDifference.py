@@ -33,12 +33,6 @@ features_2 = int(arcpy.GetCount_management(file_2).getOutput(0))
 assert features_1 == features_2, 'Initial and final shapefiles must have the same number of features'
 
 arcpy.AddMessage('Creating new file')
-##try:
-##    arcpy.CopyFeatures_management(file_1, new_file)
-##except Exception:
-##    arcpy.AddMessage('WARNING: Overwriting existing file ' + new_file)
-##    arcpy.Delete_management(new_file)
-##    arcpy.CopyFeatures_management(file_1, new_file)
 new_file_path = new_file.split('\\')
 new_file_dir = '\\'.join(new_file_path[:-1])
 if new_file_path[-1] in os.listdir(new_file_dir):
