@@ -21,6 +21,8 @@ to_shp_file = arcpy.GetParameterAsText(2)
 to_field = arcpy.GetParameterAsText(3)
 outfile = arcpy.GetParameterAsText(4)
 show_matrix = arcpy.GetParameter(5)
+remove_temp_if_successful = arcpy.GetParameter(6)
+remove_temp_if_error = arcpy.GetParameter(7)
 
 #Check if the outfile is specified as a csv file. If it isn't, do so.
 if outfile[-4:] != '.csv':
@@ -72,10 +74,12 @@ try:
 
     #Write to csv, and delete the temporary directory
     out_data.to_csv(outfile)
-    clear_temp()
+    if remove_temp_if_successful:
+        clear_temp()
 
 except Exception as e:
-    clear_temp()
+    if remove_temp_if_error:
+        clear_temp()
     exc_type, exc_obj, exc_tb = sys.exc_info()
     print (exc_tb.tb_lineno)
     raise e

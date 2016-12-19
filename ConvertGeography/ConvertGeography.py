@@ -36,6 +36,8 @@ to_field = arcpy.GetParameterAsText(3)
 new_shp_file = arcpy.GetParameterAsText(4)
 matrix_file = arcpy.GetParameterAsText(5)
 data_fields = arcpy.GetParameterAsText(6).split(';')
+remove_temp_if_successful = arcpy.GetParameter(7)
+remove_temp_if_error = arcpy.GetParameter(8)
 
 #If the new shapefile is not specified as a shapefile, do so
 if new_shp_file[-4] != '.shp':
@@ -52,7 +54,7 @@ if matrix_file[-4:] != '.csv':
 arcpy.AddMessage('Creating Area Conversion Matrix')
 tbx = os.path.join(os.path.split(os.getcwd())[0], 'IndyGeoTools.tbx')
 arcpy.ImportToolbox(tbx)
-arcpy.GetAreaConversionMatrix_IndyGeoTools(from_shp_file, from_field, to_shp_file, to_field, matrix_file, False)
+arcpy.GetAreaConversionMatrix_IndyGeoTools(from_shp_file, from_field, to_shp_file, to_field, matrix_file, False, remove_temp_if_successful, remove_temp_if_error)
 
 matrix = pd.DataFrame.from_csv(matrix_file)
 matrix.columns = matrix.columns.astype(float)
