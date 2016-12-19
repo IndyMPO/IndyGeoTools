@@ -1,5 +1,6 @@
 import arcpy
 import numpy as np
+from subprocess import Popen
 
 taz_file = arcpy.GetParameterAsText(0)
 skim_file = arcpy.GetParameterAsText(1)
@@ -29,8 +30,6 @@ def extract_skim_from_csv(csv_file):
     skim = data[1:, 1:] #Define actual skim data
     return skim, zone_map
 
-
-
 def create_subskim(skim, zone_map, subset_zones):
     indices = []
     for zone in subset_zones:
@@ -38,8 +37,6 @@ def create_subskim(skim, zone_map, subset_zones):
     subskim = skim[:, indices][indices]
     subzone_map = {subset_zones[i]: i for i in range(len(subset_zones))}
     return subskim, subzone_map
-
-
 
 arcpy.AddMessage('Adding new fields')
 new_fields = ['AVIN' + new_field_suffix,
@@ -82,7 +79,5 @@ results = ['Average = %f'%(avg), 'Standard Error = %f'%(se)]
 arcpy.AddMessage('Writing Output File')
 open(output_file, 'w').write('\n'.join(results))
 
-arcpy.AddMessage(' ')
-arcpy.AddMessage(results[0])
-arcpy.AddMessage(results[1])
+Popen(output_file, shell = True)
 
