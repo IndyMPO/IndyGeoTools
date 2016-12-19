@@ -1,4 +1,5 @@
-#This script copyright 2016 Indianapolis Metropolitan Planning Organization
+#This script copyright 2017 Indianapolis Metropolitan Planning Organization
+__version__ = '1.0'
 
 import arcpy
 import numpy as np

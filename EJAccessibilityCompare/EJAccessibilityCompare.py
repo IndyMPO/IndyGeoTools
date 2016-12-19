@@ -1,4 +1,7 @@
 import arcpy
+#This script copyright 2017 Indianapolis Metropolitan Planning Organization
+__version__ = '1.0'
+
 from numpy import array
 
 taz_file = arcpy.GetParameterAsText(0) #Shapefile

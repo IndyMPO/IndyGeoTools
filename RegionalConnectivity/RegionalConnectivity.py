@@ -1,3 +1,6 @@
+#This script copyright 2017 Indianapolis Metropolitan Planning Organization
+__version__ = '1.0'
+
 import arcpy
 import numpy as np
 from subprocess import Popen
