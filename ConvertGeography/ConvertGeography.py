@@ -5,6 +5,7 @@ __version__ = '1.0'
 import pandas as pd
 import numpy as np
 import os
+from GetAreaConversionMatrix import main as GetAreaConversionMatrix
 
 def shp2df(shp, fields):
     '''
@@ -55,12 +56,9 @@ if matrix_file[-4:] != '.csv':
 
 
 arcpy.AddMessage('Creating Area Conversion Matrix')
-tbx = os.path.join(os.path.split(os.getcwd())[0], 'IndyGeoTools.tbx')
-arcpy.ImportToolbox(tbx)
-arcpy.GetAreaConversionMatrix_IndyGeoTools(from_shp_file, from_field, to_shp_file, to_field, matrix_file, False, remove_temp_if_successful, remove_temp_if_error)
+GetAreaConversionMatrix(from_shp_file, from_field, to_shp_file, to_field, matrix_file, False, remove_temp_if_successful, remove_temp_if_error)
 
 matrix = pd.DataFrame.from_csv(matrix_file)
-matrix.columns = matrix.columns.astype(float)
 
 arcpy.AddMessage('Reading Data')
 in_data = shp2df(from_shp_file, [from_field] + data_fields)
