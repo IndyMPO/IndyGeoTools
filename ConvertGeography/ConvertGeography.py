@@ -1,7 +1,5 @@
 import arcpy
 #This script copyright 2017 Indianapolis Metropolitan Planning Organization
-__version__ = '1.0'
-
 import pandas as pd
 import numpy as np
 import os
