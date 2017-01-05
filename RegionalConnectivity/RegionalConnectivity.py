@@ -32,6 +32,25 @@ def extract_skim_from_csv(csv_file):
     return skim, zone_map
 
 def create_subskim(skim, zone_map, subset_zones):
+    '''
+    Creates a subset skim based on a subset of zones for the original skim
+
+    Parameters
+    ----------
+    skim (ndarray):
+        Skim matrix values
+    zone_map (dict):
+        Dictionary mapping zone number to skim index
+    subset_zones (list):
+        List of zones within the skim's zones to create a subset skim
+
+    Returns
+    -------
+    subskim (ndarray):
+        Subset skim
+    subzone_map (dict):
+        Dictionary mapping zone number to subset skim index
+    '''
     indices = []
     for zone in subset_zones:
         indices.append(zone_map[int(zone)])
