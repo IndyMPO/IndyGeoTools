@@ -1,2 +1,0 @@
-Average Travel Time = 34.766585
-Root Mean Square Travel Time = 37.805225

@@ -1,8 +1,0 @@
-Non-EJ average job auto accessibility: 3.694
-EJ average job auto accessibility: 7.934
-Difference: -4.239
-
-
-Non-EJ average job transit accessibility: 0.073
-EJ average job transit accessibility: 0.613
-Difference: -0.539
