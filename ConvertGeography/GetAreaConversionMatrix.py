@@ -1,4 +1,5 @@
 #This script copyright 2017 Indianapolis Metropolitan Planning Organization
+from __future__ import division
 import arcpy
 import os
 import pandas as pd

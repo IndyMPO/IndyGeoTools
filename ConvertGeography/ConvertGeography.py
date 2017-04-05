@@ -1,3 +1,4 @@
+from __future__ import division
 import arcpy
 #This script copyright 2017 Indianapolis Metropolitan Planning Organization
 import pandas as pd
@@ -62,10 +63,10 @@ arcpy.AddMessage('Reading Data')
 in_data = shp2df(from_shp_file, [from_field] + data_fields)
 in_data = in_data.set_index(from_field)
 
-matrix = matrix[in_data.index] #Make sure the matrix's columns are in the same order as the rows of in_data
+matrix = matrix[np.array(in_data.index).astype(str)] #Make sure the matrix's columns are in the same order as the rows of in_data
 
 arcpy.AddMessage('Converting Data')
-out_data = pd.DataFrame(np.dot(matrix, in_data), index = matrix.index, columns = data_fields)
+out_data = pd.DataFrame(np.dot(matrix.values, in_data.values), index = matrix.index, columns = data_fields)
 
 #Remove unnecessary fields from the new shapefile
 arcpy.AddMessage('Writing Converted Data')
@@ -80,8 +81,11 @@ for field in data_fields:
 #Write data to the new shapefile
 rows = arcpy.da.UpdateCursor(new_shp_file, [to_field] + data_fields)
 for row in rows:
-    row[1:] = out_data.loc[row[0]]
-    rows.updateRow(row)
+    try:
+        row[1:] = out_data.loc[row[0]]
+        rows.updateRow(row)
+    except KeyError:
+        continue
 del rows
 
 print 'Done'

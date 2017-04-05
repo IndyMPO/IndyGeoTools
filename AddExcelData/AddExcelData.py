@@ -18,7 +18,9 @@ data = pd.read_excel(excel_file, sheet, index_col = 0)
 #Add fields based on columns of the table
 new_fields = []
 for col in data.columns:
-    new_field = sheet + col
+    #new_field = sheet + col
+    new_field = col
+    arcpy.AddMessage(new_field)
     new_fields += [new_field]
     if new_field not in [field.name for field in arcpy.ListFields(shapefile)]:
         arcpy.AddField_management(shapefile, new_field, dtype_map[str(data[col].dtype)], field_is_nullable = True)
