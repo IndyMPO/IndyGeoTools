@@ -19,7 +19,11 @@ data = pd.read_excel(excel_file, sheet, index_col = 0)
 new_fields = []
 for col in data.columns:
     #new_field = sheet + col
-    new_field = col
+    if len(col) > 10:
+        arcpy.AddMessage('WARNING: Truncating field {0} to {1}'.format(col, col[:10]))
+        new_field = col[:10]
+    else:
+        new_field = col
     arcpy.AddMessage(new_field)
     new_fields += [new_field]
     if new_field not in [field.name for field in arcpy.ListFields(shapefile)]:

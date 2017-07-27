@@ -6,12 +6,14 @@ import numpy as np
 auto_skim_file = arcpy.GetParameterAsText(0)
 transit_skim_file = arcpy.GetParameterAsText(1)
 auto_time_threshold = arcpy.GetParameter(2)
-transit_time_threshold = arcpy.GetParameter(3)
-taz_file = arcpy.GetParameterAsText(4)
-taz_field = arcpy.GetParameterAsText(5)
-pop_field = arcpy.GetParameterAsText(6)
-emp_field = arcpy.GetParameterAsText(7)
-ret_field = arcpy.GetParameterAsText(8)
+auto_function_decay = arcpy.GetParameter(3)
+transit_time_threshold = arcpy.GetParameter(4)
+transit_function_decay = arcpy.GetParameter(5)
+taz_file = arcpy.GetParameterAsText(6)
+taz_field = arcpy.GetParameterAsText(7)
+pop_field = arcpy.GetParameterAsText(8)
+emp_field = arcpy.GetParameterAsText(9)
+ret_field = arcpy.GetParameterAsText(10)
 accpop_name = 'ACC_POP'
 accret_name = 'ACC_RET'
 accnre_name = 'ACC_NRE'
@@ -19,6 +21,11 @@ attpop_name = 'ATT_POP'
 attret_name = 'ATT_RET'
 attnre_name = 'ATT_NRE'
 trnacc_name = 'TRN_ACC'
+
+if auto_function_decay <= 0:
+    auto_function_decay = np.inf
+if transit_function_decay <= 0:
+    transit_function_decay = np.inf
 
 def extract_skim_from_csv(csv_file):
     '''
@@ -35,75 +42,109 @@ def extract_skim_from_csv(csv_file):
     skim = data[1:, 1:] #Define actual skim data
     return skim, zone_map
 
-def under_auto_threshold(time):
+##def under_auto_threshold(time):
+##    '''
+##    Checks if a time is less than or equal to the auto threshold
+##
+##    Parameters
+##    ----------
+##    time (numeric):
+##        Travel time value to be tested
+##
+##    Returns
+##    -------
+##    is_under (bool):
+##        True if the time is less than or equal to the threshold, False otherwise
+##    '''
+##    global auto_time_threshold
+##    return time <= auto_time_threshold
+##
+##create_auto_bool_skim = np.vectorize(under_auto_threshold)
+##
+##def under_transit_threshold(time):
+##    '''
+##    Checks if a time is less than or equal to the transit threshold
+##
+##    Parameters
+##    ----------
+##    time (numeric):
+##        Travel time value to be tested
+##
+##    Returns
+##    -------
+##    is_under (bool):
+##        True if the time is less than or equal to the threshold, False otherwise
+##    '''
+##    global transit_time_threshold
+##    return time <= transit_time_threshold
+##
+##create_transit_bool_skim = np.vectorize(under_transit_threshold)
+##
+##def create_bool_skim(skim, threshold):
+##    '''
+##    Creates a boolean "skim" that is True if an origin-destination pair is less than or equal to a specified threshold and False otherwise
+##
+##    Parameters
+##    ----------
+##    skim (ndarray):
+##        2-dimensional skim array
+##    threshold (numeric):
+##        Travel time threshold
+##
+##    Returns
+##    -------
+##    out (ndarray):
+##        Array with same dimensions as input skim full of ones and zeros indicating if a pair is less than or equal to `threshold`
+##    '''
+##    out = np.empty_like(skim)
+##    #Iterate over rows and columns, checking each skim individually
+##    for i in range(skim.shape[0]):
+##        for j in range(skim.shape[1]):
+##            out[i, j] = skim[i, j] <= threshold
+##    return out
+
+def apply_auto_decay_function(skim):
     '''
-    Checks if a time is less than or equal to the auto threshold
-
-    Parameters
-    ----------
-    time (numeric):
-        Travel time value to be tested
-
-    Returns
-    -------
-    is_under (bool):
-        True if the time is less than or equal to the threshold, False otherwise
-    '''
-    global auto_time_threshold
-    return time <= auto_time_threshold
-
-create_auto_bool_skim = np.vectorize(under_auto_threshold)
-
-def under_transit_threshold(time):
-    '''
-    Checks if a time is less than or equal to the transit threshold
-
-    Parameters
-    ----------
-    time (numeric):
-        Travel time value to be tested
-
-    Returns
-    -------
-    is_under (bool):
-        True if the time is less than or equal to the threshold, False otherwise
-    '''
-    global transit_time_threshold
-    return time <= transit_time_threshold
-
-create_transit_bool_skim = np.vectorize(under_transit_threshold)
-
-def create_bool_skim(skim, threshold):
-    '''
-    Creates a boolean "skim" that is True if an origin-destination pair is less than or equal to a specified threshold and False otherwise
+    Applies a decay function to each element of an auto skim matrix
 
     Parameters
     ----------
     skim (ndarray):
-        2-dimensional skim array
-    threshold (numeric):
-        Travel time threshold
+        Skim matrix
 
     Returns
     -------
-    out (ndarray):
-        Array with same dimensions as input skim full of ones and zeros indicating if a pair is less than or equal to `threshold`
+    weight_skim (ndarray):
+        A matrix of weights with the same shape as `skim`
     '''
-    out = np.empty_like(skim)
-    #Iterate over rows and columns, checking each skim individually
-    for i in range(skim.shape[0]):
-        for j in range(skim.shape[1]):
-            out[i, j] = skim[i, j] <= threshold
-    return out
+    global auto_time_threshold, auto_function_decay
+    return np.exp(-0.5*np.power(skim/auto_time_threshold, auto_function_decay))
 
-def calc_auto_acc(bool_skim, zone_map, taz_file):
+def apply_transit_decay_function(skim):
+    '''
+    Applies a decay function to each element of an auto skim matrix
+
+    Parameters
+    ----------
+    skim (ndarray):
+        Skim matrix
+
+    Returns
+    -------
+    weight_skim (ndarray):
+        A matrix of weights with the same shape as `skim`
+    '''
+    global transit_time_threshold, transit_function_decay
+    return np.exp(-0.5*np.power(skim/transit_time_threshold, transit_function_decay))
+
+def calc_auto_acc(weight_skim, zone_map, taz_file):
     '''
     Calculates the number of people, retail, and non-retail jobs within a threshold of each zone. Accessibilities in the input shapefile are updated.
 
     Parameters
     ----------
-    bool_skim (ndarray):
-        2-dimensional Boolean "skim"
+    weight_skim (ndarray):
+        Weight skim
     zone_map (dict):
         Dictionary mapping zone number to index in the skim
     taz_file (str):
@@ -111,16 +152,16 @@ def calc_auto_acc(bool_skim, zone_map, taz_file):
     '''
     global taz_field, pop_field, emp_field, ret_field, accpop_name, accret_name, accnre_name
 
-    pop = np.empty_like(bool_skim, dtype = int)
-    ret = np.empty_like(bool_skim, dtype = int)
-    nre = np.empty_like(bool_skim, dtype = int)
+    pop = np.empty_like(weight_skim, dtype = int)
+    ret = np.empty_like(weight_skim, dtype = int)
+    nre = np.empty_like(weight_skim, dtype = int)
 
     #For each zone, create ndarrays that represent the number of people, retail, and non-retail jobs that can be reached within a specific time
     zones = arcpy.da.SearchCursor(taz_file, field_names = [taz_field, pop_field, emp_field, ret_field])
     for zone in zones:
-        pop[:, zone_map[zone[0]]] = zone[1]*bool_skim[:, zone_map[zone[0]]]
-        ret[:, zone_map[zone[0]]] = zone[3]*bool_skim[:, zone_map[zone[0]]]
-        nre[:, zone_map[zone[0]]] = (zone[2] - zone[3])*bool_skim[:, zone_map[zone[0]]]
+        pop[:, zone_map[zone[0]]] = zone[1]*weight_skim[:, zone_map[zone[0]]]
+        ret[:, zone_map[zone[0]]] = zone[3]*weight_skim[:, zone_map[zone[0]]]
+        nre[:, zone_map[zone[0]]] = (zone[2] - zone[3])*weight_skim[:, zone_map[zone[0]]]
 
     #Calculate the row sums to get the total number of people, retail, and non-retail jobs that can be reached within a specific time for each origin zone
     acc_pop = pop.sum(1)
@@ -139,14 +180,14 @@ def calc_auto_acc(bool_skim, zone_map, taz_file):
     del zone
     del zones
 
-def calc_auto_att(bool_skim, zone_map, taz_file):
+def calc_auto_att(weight_skim, zone_map, taz_file):
     '''
     Calculates the number of people, retail, and non-retail jobs that can reach each zone within a specific time. Attractivenesses in the input shapefile are updated.
 
     Parameters
     ----------
-    bool_skim (ndarray):
-        2-dimensional Boolean "skim"
+    weight_skim (ndarray):
+        Weight skim
     zone_map (dict):
         Dictionary mapping zone number to index in the skim
     taz_file (str):
@@ -154,16 +195,16 @@ def calc_auto_att(bool_skim, zone_map, taz_file):
     '''
     global taz_field, pop_field, emp_field, ret_field, attpop_name, attret_name, attnre_name
 
-    pop = np.empty_like(bool_skim, dtype = int)
-    ret = np.empty_like(bool_skim, dtype = int)
-    nre = np.empty_like(bool_skim, dtype = int)
+    pop = np.empty_like(weight_skim, dtype = int)
+    ret = np.empty_like(weight_skim, dtype = int)
+    nre = np.empty_like(weight_skim, dtype = int)
 
     #For each zone, create ndarrays that represent the number of people, retail, and non-retail jobs that can reach a zone within a specific time
     zones = arcpy.da.SearchCursor(taz_file, field_names = [taz_field, pop_field, emp_field, ret_field])
     for zone in zones:
-        pop[zone_map[zone[0]], :] = zone[1]*bool_skim[zone_map[zone[0]], :]
-        ret[zone_map[zone[0]], :] = zone[3]*bool_skim[zone_map[zone[0]], :]
-        nre[zone_map[zone[0]], :] = (zone[2] - zone[3])*bool_skim[zone_map[zone[0]], :]
+        pop[zone_map[zone[0]], :] = zone[1]*weight_skim[zone_map[zone[0]], :]
+        ret[zone_map[zone[0]], :] = zone[3]*weight_skim[zone_map[zone[0]], :]
+        nre[zone_map[zone[0]], :] = (zone[2] - zone[3])*weight_skim[zone_map[zone[0]], :]
 
     #Calculate the column sums to get the total number of people, retail, and non-retail jobs that can reach each destination zone within a specific time
     att_pop = pop.sum(0)
@@ -182,14 +223,14 @@ def calc_auto_att(bool_skim, zone_map, taz_file):
     del zone
     del zones
 
-def calc_transit_acc(bool_skim, zone_map, taz_file):
+def calc_transit_acc(weight_skim, zone_map, taz_file):
     '''
     Calculates the number of jobs that can be accessed by transit within a specified time for each zone. Accessibilities in the input shapefile are updated.
 
     Parameters
     ----------
-    bool_skim (ndarray):
-        2-dimensional Boolean "skim"
+    weight_skim (ndarray):
+        Weight skim
     zone_map (dict):
         Dictionary mapping zone number to index in the skim
     taz_file (str):
@@ -197,12 +238,12 @@ def calc_transit_acc(bool_skim, zone_map, taz_file):
     '''
     global taz_field, emp_field, trnacc_name
 
-    emp = np.empty_like(bool_skim, dtype = int)
+    emp = np.empty_like(weight_skim, dtype = int)
 
     #Calculate number of jobs that can be reached by each origin zone in each destination zone within a specific time
     zones = arcpy.da.SearchCursor(taz_file, field_names = [taz_field, emp_field])
     for zone in zones:
-        emp[:, zone_map[zone[0]]] = zone[1]*bool_skim[:, zone_map[zone[0]]]
+        emp[:, zone_map[zone[0]]] = zone[1]*weight_skim[:, zone_map[zone[0]]]
 
     #Calculate the row sums to get the total number of jobs that each origin zone can reach within a specific time
     trn_acc = emp.sum(1)
@@ -232,20 +273,20 @@ for field in new_fields:
 arcpy.AddMessage('Reading in Auto Skim')
 (auto, auto_zones) = extract_skim_from_csv(auto_skim_file)
 
-arcpy.AddMessage('Creating auto Boolean "skim"')
-auto_bool = create_auto_bool_skim(auto)
+arcpy.AddMessage('Creating auto weight skim')
+auto_weight = apply_auto_decay_function(auto)
 
 arcpy.AddMessage('Reading in Transit Skim')
 (transit, transit_zones) = extract_skim_from_csv(transit_skim_file)
 
-arcpy.AddMessage('Creating transit Boolean "skim"')
-transit_bool = create_transit_bool_skim(transit)
+arcpy.AddMessage('Creating transit weight skim')
+transit_weight = apply_transit_decay_function(transit)
 
 arcpy.AddMessage('Calculating Auto Accessibility')
-calc_auto_acc(auto_bool, auto_zones, taz_file)
+calc_auto_acc(auto_weight, auto_zones, taz_file)
 
 arcpy.AddMessage('Calculating Auto Attractiveness')
-calc_auto_att(auto_bool, auto_zones, taz_file)
+calc_auto_att(auto_weight, auto_zones, taz_file)
 
 arcpy.AddMessage('Calculting Transit Accessibility')
-calc_transit_acc(transit_bool, transit_zones, taz_file)
+calc_transit_acc(transit_weight, transit_zones, taz_file)
