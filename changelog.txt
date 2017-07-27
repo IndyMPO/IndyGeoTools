@@ -8,3 +8,10 @@
 	*ConvertGeography/ConvertGeography.py: Made changes to better handle numeric polygon labels
 
 	*ConvertGeography/GetAreaConversionMatrix.py: Added "from __future__ import division"
+
+
+2017-07-27 Joe Flood <Joseph.Flood@indympo.org>
+
+	*AccessibilityCalculator/AccessibilityCalculator.py: Added capability of using more general time-weighing functions
+
+	*IndyGeoToolsUserGuide.pdf: Updated documentation to reflect change in accessibility calculator
